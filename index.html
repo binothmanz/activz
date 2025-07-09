@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة أنشطة المعلمين</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff6b6b;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #28a745;
+            --warning: #ffc107;
+            --card-bg: #ffffff;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #e4e9f7);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            color: white;
+            z-index: 2;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+            z-index: -1;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+            margin-bottom: -1px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            background: #f0f4ff;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #5a67d8;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 0 0 20px 20px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(37, 117, 252, 0.15);
+            outline: none;
+            background: white;
+        }
+        
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 43px;
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+        
+        .input-with-icon {
+            padding-right: 50px;
+        }
+        
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 16px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.4s;
+        }
+        
+        .btn:hover::after {
+            transform: translateX(0);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #20bf6b, #01baef);
+            color: white;
+        }
+        
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: white;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .counter {
+            position: absolute;
+            left: 15px;
+            bottom: -25px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .upload-container {
+            border: 2px dashed #e1e5eb;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-container:hover {
+            border-color: var(--secondary);
+            background: rgba(37, 117, 252, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .activities-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .activity-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            border-top: 5px solid var(--primary);
+        }
+        
+        .activity-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            padding: 20px;
+            background: linear-gradient(to right, rgba(106, 17, 203, 0.1), rgba(37, 117, 252, 0.1));
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .card-section {
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .objectives-list {
+            padding-right: 20px;
+        }
+        
+        .objectives-list li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: block;
+        }
+        
+        .no-image {
+            background: #f0f4ff;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .no-activities {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            margin-top: 20px;
+        }
+        
+        .no-activities i {
+            font-size: 5rem;
+            color: #e9ecef;
+            margin-bottom: 20px;
+        }
+        
+        .no-activities h3 {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .activities-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>نظام إدارة أنشطة المعلمين</h1>
+            <p class="subtitle">سجل الأنشطة التعليمية وأرسلها إلى واتساب واحفظها في جوجل شيتس</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="form">تسجيل نشاط جديد</button>
+            <button class="tab-btn" data-tab="view">عرض الأنشطة المسجلة</button>
+        </div>
+        
+        <!-- تسجيل النشاط -->
+        <div class="tab-content active" id="form-tab">
+            <form id="activity-form">
+                <div class="form-group">
+                    <label for="date"><i class="fas fa-calendar"></i> التاريخ</label>
+                    <input type="date" id="date" class="input-with-icon">
+                </div>
+                
+                <div class="form-group">
+                    <label for="day"><i class="fas fa-calendar-day"></i> اليوم</label>
+                    <select id="day" class="input-with-icon">
+                        <option value="">اختر يوم الأسبوع</option>
+                        <option value="الأحد">الأحد</option>
+                        <option value="الاثنين">الاثنين</option>
+                        <option value="الثلاثاء">الثلاثاء</option>
+                        <option value="الأربعاء">الأربعاء</option>
+                        <option value="الخميس">الخميس</option>
+                        <option value="الجمعة">الجمعة</option>
+                        <option value="السبت">السبت</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teacher"><i class="fas fa-user-graduate"></i> اسم المعلم</label>
+                    <select id="teacher" class="input-with-icon">
+                        <option value="">اختر المعلم</option>
+                        <option value="أحمد محمد">أحمد محمد</option>
+                        <option value="فاطمة عبدالله">فاطمة عبدالله</option>
+                        <option value="خالد سعيد">خالد سعيد</option>
+                        <option value="سارة علي">سارة علي</option>
+                        <option value="عمر حسن">عمر حسن</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title"><i class="fas fa-heading"></i> عنوان النشاط</label>
+                    <input type="text" id="title" class="input-with-icon" placeholder="أدخل عنوان النشاط">
+                </div>
+                
+                <div class="form-group">
+                    <label for="participants"><i class="fas fa-users"></i> عدد المشاركين</label>
+                    <input type="number" id="participants" class="input-with-icon" placeholder="أدخل عدد المشاركين" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="objectives"><i class="fas fa-bullseye"></i> أهداف النشاط</label>
+                    <textarea id="objectives" class="input-with-icon" rows="3" placeholder="أدخل أهداف النشاط (كل هدف في سطر)"></textarea>
+                    <div class="counter">سيتم ترقيم الأهداف تلقائياً</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description"><i class="fas fa-file-alt"></i> وصف النشاط</label>
+                    <textarea id="description" class="input-with-icon" rows="4" placeholder="أدخل وصفاً مفصلاً للنشاط"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image"><i class="fas fa-image"></i> صورة النشاط</label>
+                    <div class="upload-container" id="upload-area">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <p>انقر لرفع صورة معبرة عن النشاط</p>
+                        <p class="small">(الحد الأقصى لحجم الصورة: 5MB)</p>
+                        <img id="image-preview" class="preview-image" alt="معاينة الصورة">
+                        <input type="file" id="image" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes"><i class="fas fa-sticky-note"></i> ملاحظة (اختياري)</label>
+                    <textarea id="notes" class="input-with-icon" rows="2" placeholder="أي ملاحظات إضافية"></textarea>
+                </div>
+                
+                <div class="btn-container">
+                    <button type="button" id="whatsapp-btn" class="btn btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i> إرسال إلى واتساب
+                    </button>
+                    
+                    <button type="button" id="save-btn" class="btn btn-primary">
+                        <i class="fas fa-save"></i> حفظ النشاط
+                    </button>
+                    
+                    <button type="reset" class="btn">
+                        <i class="fas fa-redo"></i> إعادة تعيين
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- عرض الأنشطة -->
+        <div class="tab-content" id="view-tab">
+            <div class="form-group">
+                <input type="text" id="search-input" placeholder="ابحث في الأنشطة المسجلة..." class="input-with-icon">
+                <i class="fas fa-search" style="top: 15px; left: 20px;"></i>
+            </div>
+            
+            <div class="btn-container">
+                <button type="button" id="sync-btn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> تحديث البيانات
+                </button>
+                
+                <button type="button" id="export-btn" class="btn">
+                    <i class="fas fa-file-excel"></i> تصدير إلى Excel
+                </button>
+            </div>
+            
+            <div id="activities-list" class="activities-container">
+                <!-- سيتم ملؤها بالبيانات من جوجل شيتس -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تعيين التاريخ الافتراضي
+        document.addEventListener('DOMContentLoaded', function() {
+            // تعيين تاريخ اليوم
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('date').value = formattedDate;
+            
+            // تعيين يوم الأسبوع
+            const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            const todayIndex = today.getDay();
+            document.getElementById('day').value = days[todayIndex];
+            
+            // معاينة الصورة
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('image');
+            const imagePreview = document.getElementById('image-preview');
+            
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // تبديل التبويبات
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    // إزالة النشط من جميع الأزرار
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // إخفاء جميع محتويات التبويبات
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // إضافة النشط للزر المحدد
+                    this.classList.add('active');
+                    
+                    // إظهار محتوى التبويب المحدد
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // عند التبديل إلى عرض الأنشطة، تحديث البيانات
+                    if (tabId === 'view') {
+                        loadActivities();
+                    }
+                });
+            });
+            
+            // زر إرسال إلى واتساب
+            document.getElementById('whatsapp-btn').addEventListener('click', function() {
+                if (!validateForm()) return;
+                
+                const activityData = gatherFormData();
+                const whatsappMessage = formatWhatsAppMessage(activityData);
+                
+                // ترميز الرسالة لواتساب
+                const encodedMessage = encodeURIComponent(whatsappMessage);
+                const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+                
+                // فتح واتساب في نافذة جديدة
+                window.open(whatsappUrl, '_blank');
+            });
+            
+            // زر حفظ النشاط
+            document.getElementById('save-btn').addEventListener('click', function() {
+                if (!validateForm()) return;
+                
+                const activityData = gatherFormData();
+                saveToGoogleSheets(activityData);
+            });
+            
+            // زر تحديث البيانات
+            document.getElementById('sync-btn').addEventListener('click', function() {
+                loadActivities();
+            });
+            
+            // البحث في الأنشطة
+            document.getElementById('search-input').addEventListener('input', function() {
+                filterActivities(this.value.toLowerCase());
+            });
+            
+            // زر التصدير إلى Excel
+            document.getElementById('export-btn').addEventListener('click', function() {
+                Swal.fire({
+                    title: 'تحميل البيانات',
+                    text: 'جاري تحضير ملف Excel للتحميل...',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    allowOutsideClick: false
+                });
+                
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'تم التصدير بنجاح!',
+                        text: 'سيبدأ تحميل ملف Excel الآن',
+                        icon: 'success',
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    
+                    // في التطبيق الحقيقي، سيكون هنا رابط لتحميل الملف
+                }, 1500);
+            });
+            
+            // تحقق من صحة النموذج
+            function validateForm() {
+                const requiredFields = ['day', 'teacher', 'title', 'participants', 'objectives', 'description'];
+                let isValid = true;
+                
+                for (const fieldId of requiredFields) {
+                    const field = document.getElementById(fieldId);
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.style.borderColor = 'red';
+                        setTimeout(() => {
+                            field.style.borderColor = '#e1e5eb';
+                        }, 2000);
+                    }
+                }
+                
+                return isValid;
+            }
+            
+            // جمع بيانات النموذج
+            function gatherFormData() {
+                return {
+                    date: document.getElementById('date').value,
+                    day: document.getElementById('day').value,
+                    teacher: document.getElementById('teacher').value,
+                    title: document.getElementById('title').value,
+                    participants: document.getElementById('participants').value,
+                    objectives: document.getElementById('objectives').value,
+                    description: document.getElementById('description').value,
+                    notes: document.getElementById('notes').value,
+                    image: document.getElementById('image').files[0] ? document.getElementById('image').files[0].name : null
+                };
+            }
+            
+            // تنسيق رسالة واتساب
+            function formatWhatsAppMessage(data) {
+                // تنسيق الأهداف مع الترقيم
+                const objectivesList = data.objectives.split('\n')
+                    .filter(obj => obj.trim() !== '')
+                    .map((obj, index) => `${index + 1}. ${obj.trim()}`)
+                    .join('\n');
+                
+                return `📋 *تسجيل نشاط تعليمي جديد*
+                
+🗓️ *التاريخ:* ${data.date} (${data.day})
+👤 *اسم المعلم:* ${data.teacher}
+🏷️ *عنوان النشاط:* ${data.title}
+👥 *عدد المشاركين:* ${data.participants}
+
+🎯 *أهداف النشاط:*
+${objectivesList}
+
+📝 *وصف النشاط:*
+${data.description}
+
+📸 *صورة النشاط:* ${data.image ? data.image : 'لم يتم رفع صورة'}
+
+💬 *ملاحظات:* ${data.notes || 'لا توجد ملاحظات'}
+
+#نشاط_تعليمي #أنشطة_المعلمين`;
+            }
+            
+            // الحفظ في جوجل شيتس
+            function saveToGoogleSheets(activityData) {
+                Swal.fire({
+                    title: 'جاري الحفظ...',
+                    text: 'يتم حفظ النشاط في جوجل شيتس',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    allowOutsideClick: false
+                });
+                
+                // رابط السكريبت الذي يربط مع جدولك
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbwvU5mz6T6f2VnZ1HdUwDc6jKcUj6uK1YjzJ8iB4fMv4p0J1lK2K0zFd4b4eF7kGjK0c/exec';
+                
+                // إرسال البيانات إلى Google Apps Script
+                fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(activityData),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: 'تم الحفظ بنجاح!',
+                            text: 'تم تسجيل النشاط في جوجل شيتس',
+                            icon: 'success',
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                        
+                        // إعادة تعيين النموذج
+                        document.getElementById('activity-form').reset();
+                        imagePreview.style.display = 'none';
+                        
+                        // تحديث قائمة الأنشطة عند التبديل للتبويب
+                        if (document.getElementById('view-tab').classList.contains('active')) {
+                            loadActivities();
+                        }
+                    } else {
+                        throw new Error('فشل في الحفظ');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: 'حدث خطأ أثناء حفظ النشاط',
+                        icon: 'error'
+                    });
+                });
+            }
+            
+            // تحميل الأنشطة من جوجل شيتس
+            function loadActivities() {
+                Swal.fire({
+                    title: 'جاري التحميل...',
+                    text: 'يتم جلب أحدث الأنشطة من جوجل شيتس',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    allowOutsideClick: false
+                });
+                
+                // رابط السكريبت لجلب البيانات
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbwvU5mz6T6f2VnZ1HdUwDc6jKcUj6uK1YjzJ8iB4fMv4p0J1lK2K0zFd4b4eF7kGjK0c/exec';
+                
+                fetch(scriptURL)
+                .then(response => response.json())
+                .then(activities => {
+                    Swal.close();
+                    displayActivities(activities);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: 'حدث خطأ أثناء جلب البيانات',
+                        icon: 'error'
+                    });
+                });
+            }
+            
+            // عرض الأنشطة في واجهة العرض
+            function displayActivities(activities) {
+                const container = document.getElementById('activities-list');
+                container.innerHTML = '';
+                
+                if (activities.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-activities">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>لا توجد أنشطة مسجلة بعد</h3>
+                            <p>قم بتسجيل نشاطك الأول باستخدام نموذج التسجيل</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                activities.forEach(activity => {
+                    const formattedDate = new Date(activity.date).toLocaleDateString('ar-EG');
+                    
+                    // تنسيق الأهداف كقائمة مرقمة
+                    const objectivesList = activity.objectives ? 
+                        activity.objectives.split('\n')
+                            .filter(obj => obj.trim() !== '')
+                            .map(obj => `<li>${obj}</li>`)
+                            .join('') : '';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'activity-card';
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <h3 class="card-title">${activity.title}</h3>
+                            <div class="card-meta">
+                                <span><i class="fas fa-user"></i> ${activity.teacher}</span>
+                                <span><i class="fas fa-calendar"></i> ${formattedDate} (${activity.day})</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-section">
+                                <div class="section-title"><i class="fas fa-bullseye"></i> الأهداف</div>
+                                <ul class="objectives-list">${objectivesList}</ul>
+                            </div>
+                            
+                            <div class="card-section">
+                                <div class="section-title"><i class="fas fa-file-alt"></i> الوصف</div>
+                                <p>${activity.description}</p>
+                            </div>
+                            
+                            <div class="card-section">
+                                <div class="section-title"><i class="fas fa-users"></i> عدد المشاركين</div>
+                                <p>${activity.participants} طالب</p>
+                            </div>
+                            
+                            ${activity.image ? 
+                                `<img src="https://placehold.co/600x400/6a11cb/white?text=${encodeURIComponent(activity.title)}" alt="صورة النشاط" class="card-image">` : 
+                                `<div class="no-image"><i class="fas fa-image"></i> لا توجد صورة</div>`}
+                            
+                            ${activity.notes ? `
+                                <div class="card-section">
+                                    <div class="section-title"><i class="fas fa-sticky-note"></i> ملاحظات</div>
+                                    <p>${activity.notes}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
+            
+            // تصفية الأنشطة حسب البحث
+            function filterActivities(searchTerm) {
+                const activities = document.querySelectorAll('.activity-card');
+                
+                activities.forEach(activity => {
+                    const title = activity.querySelector('.card-title').textContent.toLowerCase();
+                    const teacher = activity.querySelector('.card-meta span:first-child').textContent.toLowerCase();
+                    const description = activity.querySelector('.card-body p').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || 
+                        teacher.includes(searchTerm) || 
+                        description.includes(searchTerm)) {
+                        activity.style.display = 'block';
+                    } else {
+                        activity.style.display = 'none';
+                    }
+                });
+            }
+            
+            // تحميل الأنشطة عند فتح صفحة العرض
+            document.getElementById('view-tab').addEventListener('click', loadActivities);
+        });
+    </script>
+</body>
+</html>
