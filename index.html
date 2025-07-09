@@ -382,6 +382,17 @@
             margin-bottom: 15px;
         }
         
+        .debug-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
         /* Animation */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -417,6 +428,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="form">تسجيل نشاط جديد</button>
             <button class="tab-btn" data-tab="view">عرض الأنشطة المسجلة</button>
+            <button class="tab-btn" data-tab="debug">معلومات التصحيح</button>
         </div>
         
         <!-- تسجيل النشاط -->
@@ -527,6 +539,26 @@
             
             <div id="activities-list" class="activities-container">
                 <!-- سيتم ملؤها بالبيانات من جوجل شيتس -->
+            </div>
+        </div>
+        
+        <!-- معلومات التصحيح -->
+        <div class="tab-content" id="debug-tab">
+            <h2><i class="fas fa-bug"></i> معلومات التصحيح</h2>
+            <p>هذا القسم يساعدك في تشخيص مشاكل الربط مع جوجل شيتس:</p>
+            
+            <div class="debug-info" id="debug-log">
+                جاهز لتلقي معلومات التصحيح...
+            </div>
+            
+            <div class="btn-container">
+                <button type="button" id="test-connection-btn" class="btn btn-secondary">
+                    <i class="fas fa-plug"></i> اختبار الاتصال
+                </button>
+                
+                <button type="button" id="clear-debug-btn" class="btn">
+                    <i class="fas fa-trash"></i> مسح السجلات
+                </button>
             </div>
         </div>
     </div>
@@ -648,6 +680,16 @@
                 }, 1500);
             });
             
+            // زر اختبار الاتصال
+            document.getElementById('test-connection-btn').addEventListener('click', function() {
+                testConnection();
+            });
+            
+            // زر مسح سجلات التصحيح
+            document.getElementById('clear-debug-btn').addEventListener('click', function() {
+                document.getElementById('debug-log').innerHTML = 'تم مسح سجلات التصحيح...';
+            });
+            
             // تحقق من صحة النموذج
             function validateForm() {
                 const requiredFields = ['day', 'teacher', 'title', 'participants', 'objectives', 'description'];
@@ -721,7 +763,11 @@ ${data.description}
                 });
                 
                 // رابط السكريبت الذي يربط مع جدولك
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbwvU5mz6T6f2VnZ1HdUwDc6jKcUj6uK1YjzJ8iB4fMv4p0J1lK2K0zFd4b4eF7kGjK0c/exec';
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyJkDcN0f0X8cK5Hv0Y1Z2d8qX6xXxW3K6bXp9g5XJXW1s5fXq/exec';
+                
+                // إضافة سجل للتصحيح
+                addDebugLog(`بدأ حفظ النشاط: ${activityData.title}`);
+                addDebugLog(`إرسال البيانات إلى: ${scriptURL}`);
                 
                 // إرسال البيانات إلى Google Apps Script
                 fetch(scriptURL, {
@@ -731,7 +777,12 @@ ${data.description}
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`خطأ في الشبكة: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.status === 'success') {
                         Swal.fire({
@@ -742,6 +793,8 @@ ${data.description}
                             timerProgressBar: true
                         });
                         
+                        addDebugLog('تم الحفظ بنجاح في جوجل شيتس');
+                        
                         // إعادة تعيين النموذج
                         document.getElementById('activity-form').reset();
                         imagePreview.style.display = 'none';
@@ -751,14 +804,16 @@ ${data.description}
                             loadActivities();
                         }
                     } else {
-                        throw new Error('فشل في الحفظ');
+                        throw new Error(data.message || 'فشل في الحفظ');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    addDebugLog(`حدث خطأ أثناء الحفظ: ${error.message}`);
+                    
                     Swal.fire({
                         title: 'خطأ!',
-                        text: 'حدث خطأ أثناء حفظ النشاط',
+                        text: 'حدث خطأ أثناء حفظ النشاط: ' + error.message,
                         icon: 'error'
                     });
                 });
@@ -775,22 +830,63 @@ ${data.description}
                 });
                 
                 // رابط السكريبت لجلب البيانات
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbwvU5mz6T6f2VnZ1HdUwDc6jKcUj6uK1YjzJ8iB4fMv4p0J1lK2K0zFd4b4eF7kGjK0c/exec';
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyJkDcN0f0X8cK5Hv0Y1Z2d8qX6xXxW3K6bXp9g5XJXW1s5fXq/exec';
+                
+                addDebugLog(`بدأ جلب الأنشطة من: ${scriptURL}`);
                 
                 fetch(scriptURL)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`خطأ في الشبكة: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(activities => {
                     Swal.close();
+                    addDebugLog(`تم جلب ${activities.length} نشاط بنجاح`);
                     displayActivities(activities);
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    addDebugLog(`حدث خطأ أثناء جلب البيانات: ${error.message}`);
+                    
                     Swal.fire({
                         title: 'خطأ!',
-                        text: 'حدث خطأ أثناء جلب البيانات',
+                        text: 'حدث خطأ أثناء جلب البيانات: ' + error.message,
                         icon: 'error'
                     });
                 });
+            }
+            
+            // اختبار الاتصال بالسكريبت
+            function testConnection() {
+                addDebugLog('بدأ اختبار الاتصال بالسكريبت...');
+                
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyJkDcN0f0X8cK5Hv0Y1Z2d8qX6xXxW3K6bXp9g5XJXW1s5fXq/exec';
+                
+                fetch(scriptURL)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`خطأ في الشبكة: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    addDebugLog('الاتصال ناجح!');
+                    addDebugLog('الاستجابة: ' + data.substring(0, 100) + '...');
+                })
+                .catch(error => {
+                    addDebugLog(`فشل الاتصال: ${error.message}`);
+                });
+            }
+            
+            // إضافة رسالة إلى سجل التصحيح
+            function addDebugLog(message) {
+                const debugLog = document.getElementById('debug-log');
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                debugLog.appendChild(logEntry);
+                debugLog.scrollTop = debugLog.scrollHeight;
             }
             
             // عرض الأنشطة في واجهة العرض
